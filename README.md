@@ -1,2 +1,2 @@
 # PyMax
-Embedding a python interpreter in Max external objects
+Embedding a python interpreter in Max external objects using pybind11
