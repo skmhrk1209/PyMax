@@ -1,5 +1,5 @@
 # PyMax
-Embedding a python interpreter in Max external objects using pybind11
+Embedding a python interpreter in Max/MSP external objects using pybind11
 
 ```python:add.py
 import typing
