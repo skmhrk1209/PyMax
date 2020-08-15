@@ -22,17 +22,17 @@ public:
             py::module::import("sys").attr("path").cast<py::list>().append(current_dirname);
 
             auto module_name = static_cast<std::string>(atoms.front());
-            m_module = py::module::import(module_name.c_str());
+            m_function = py::module::import(module_name.c_str()).attr(module_name.c_str());
 
-            auto signature = py::module::import("signature");
-            std::tie(m_input_annotations, m_output_annotations) = signature.attr("main")(module_name, "main").cast<std::tuple<std::vector<std::string>, std::vector<std::string>>>();
+            auto signature = py::module::import("signature").attr("signature");
+            std::tie(m_input_annotations, m_output_annotations) = signature(module_name, module_name).cast<std::tuple<std::vector<std::string>, std::vector<std::string>>>();
             
             for (const auto& input_annotation : m_input_annotations) {
-                m_inlets.emplace_back(std::make_unique<c74::min::inlet<>>(this, "", input_annotation));
+                m_inlets.emplace_back(std::make_unique<c74::min::inlet<>>(this, "(" + input_annotation + ")", input_annotation));
                 m_inputs.append(0);
             }
             for (const auto& output_annotation : m_output_annotations) {
-                m_outlets.emplace_back(std::make_unique<c74::min::outlet<>>(this, "", output_annotation));
+                m_outlets.emplace_back(std::make_unique<c74::min::outlet<>>(this, "(" + output_annotation + ")", output_annotation));
             }
         }
         else {
@@ -50,7 +50,7 @@ public:
             } else {
                 c74::min::error("invalid input annotation");
             }
-            m_outputs = m_module.attr("main")(*m_inputs).cast<py::tuple>();
+            m_outputs = m_function(*m_inputs).cast<py::tuple>();
             for (auto outlet = 0; outlet < m_outlets.size(); ++outlet) {
                 if (m_output_annotations[outlet] == "int") {
                     m_outlets[outlet]->send(m_outputs[outlet].cast<int>());
@@ -72,7 +72,7 @@ protected:
     std::vector<std::string> m_output_annotations;
 
     py::scoped_interpreter m_interpreter;
-    py::module m_module;
+    py::object m_function;
 
     py::list m_inputs;
     py::tuple m_outputs;
